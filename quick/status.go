@@ -1,13 +1,19 @@
 package quick
 
 import (
+	"github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 func PeerStatus(iface string) (map[wgtypes.Key]*wgtypes.Peer, error) {
 	c, err := wgctrl.New()
-	defer c.Close()
+	defer func(c *wgctrl.Client) {
+		err := c.Close()
+		if err != nil {
+			logrus.WithError(err).WithField("iface", iface).Error("failed to close client: ", err.Error())
+		}
+	}(c)
 	if err != nil {
 		return nil, err
 	}
